@@ -117,10 +117,10 @@ function purchase(itemNeeded, quantityNeeded) {
 				//update department table for sales and profits
 
 				response[0].dept_sales += totalCustcost
-			    response[0].total_profits = response[0].dept_sales - response[0].overhead_costs
-				var sql = 'UPDATE departments SET dept_sales = ?, total_profits = ? WHERE dept_name = ?'
+			    
+				var sql = 'UPDATE departments SET dept_sales = ? WHERE dept_name = ?'
 				
-                connection.query(sql, [response[0].dept_sales, response[0].total_profits, saveDepartment], function(error, response) {
+                connection.query(sql, [response[0].dept_sales, saveDepartment], function(error, response) {
 					if (error) {
 						console.log(error)
 						undoSQL() 
@@ -153,4 +153,4 @@ function undoSQL() {
 	connection.query('ROLLBACK', function(error, response) {
 		if (error) { console.log(error) }
 
-}
+})}
