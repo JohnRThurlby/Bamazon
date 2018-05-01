@@ -20,6 +20,22 @@ CREATE TABLE departments(
   PRIMARY KEY (dept)
 );
 
+CREATE TABLE users(
+  userId INTEGER(11) AUTO_INCREMENT NOT NULL,
+  username VARCHAR(20) NOT NULL,
+  userpassword VARCHAR(20) NOT NULL,
+  PRIMARY KEY (userId)
+);
+
+CREATE TABLE purchases(
+  purchaseId INTEGER(11) AUTO_INCREMENT NOT NULL,
+  purchaseuser VARCHAR(20) NOT NULL,
+  purchaseprodId INTEGER(11) NOT NULL,
+  purchaseqty INTEGER(11) NOT NULL, 
+  purchaseprice INTEGER(10,2) NOT NULL, 
+  PRIMARY KEY (purchaseId)
+);
+
 INSERT INTO products (product_name, department_name, price, stock_qty) 
 values ('Pride and Prejudice', 'Books', 11.00, 25), ('War and Peace', 'Books', 22.00, 15), ('McBeth', 'Books', 15.00, 10);
 INSERT INTO products (product_name, department_name, price, stock_qty) 

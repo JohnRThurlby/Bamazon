@@ -12,6 +12,13 @@ const connection = mysql.createConnection({
 
 var outDesc = " " 
 
+var chars = {
+	'top': '═', 'top-mid': '╤', 'top-left': '╔', 'top-right': '╗',
+	'bottom': '═', 'bottom-mid': '╧', 'bottom-left': '╚',
+	'bottom-right': '╝', 'left': '║', 'left-mid': '╟', 'mid': '─',
+	'mid-mid': '┼', 'right': '║', 'right-mid': '╢', 'middle': '│'
+  };
+
 // connection to DB, and start by displaying possible actions
 connection.connect(function(err) {
 	if (err) throw err;
@@ -60,8 +67,6 @@ function determineAction() {
 //display sales from deparment table via view that uses alaias to calculate profit
 function displaySales() {
 
-    console.log('in here')
-
 	//connect to the mysql database and pull the information from the Products database to display to the user
 
 	var sql = 'SELECT * FROM totalsales'
@@ -69,17 +74,19 @@ function displaySales() {
 		if(err) console.log(err);
 
 		//creates a table for the information from the mysql database to be placed
+		console.log('>>>>>>Product Sales<<<<<<'.blue);
 		var table = new Table({
 			head: ['Dept Id#', 'Department Name', 'Overhead Costs', 'Sales', 'Profit'],
+			chars: chars,
+			colAligns: [null, null, 'right', 'right', 'right'],
 			style: {
 				head: ['blue'],
-				compact: false,
-				colAligns: ['center'],
+				compact: false
 			}
 		});
 
         //loops through each item in the mysql database and pushes that information into a new row in the table
-        console.log(result.length)
+        
 		for(var i = 0; i < result.length; i++){
 			table.push(
 				[result[i].dept, result[i].dept_name, result[i].overhead_costs, result[i].dept_sales, result[i].profit]
@@ -96,57 +103,62 @@ function displaySales() {
 //function to allow more stock to be added to a product
 function modifyOverhead() {
 
-	inquirer.prompt([
+	var deptnames = [];
 
-        {
-            name: "modDept",
-            type: "input",
-            message: "What is the department you want to change?"
-        }, {
-            name: 'modOver',
-            type: 'input',
-            message: "What is the new departmental overhead?"
-        },
-
-    ]).then(function(answers) {
-        
-		//connect to the mysql database and pull the information from the Products database to display to the user
-		var sql = 'SELECT * FROM departments WHERE dept = ?'
-
-		connection.query(sql, [answers.modDept], function(err, result){
-			if(err) console.log(err);
-			   
-			if (result.length < 1) {
-                outDesc = 'Department does not exist: ' + answers.modDept + 'Try again!'
-				console.log(outDesc.red);
+	connection.query('SELECT dept_name FROM departments', function(err, result){
+	if(err) throw err;
+	
+		for(var i = 0; i<result.length; i++){
+			deptnames.push(result[i].dept_name);
+		}
 				
-			}
-            else {
-                var sql = 'UPDATE departments SET overhead_costs = ? where dept = ?'
-                connection.query(sql, [parseInt(answers.modOver), answers.modDept], function(err, result){
-                    if (err) {
-                        console.log(err)
-                        undoSQL() 
-                    }
-                    
-                    // commit DB changes in case of future error, then changes up to this point are saved
-                    connection.query('COMMIT', function(err, response) {
-                        if (err) {
-                            console.log(err)
-                            undoSQL() 
-                        }
+		inquirer.prompt([
 
-                    });
-             
-                });
-                outDesc = 'Department ' + answers.modDept + ' now has a ' + answers.modOver + ' overhead'
-                console.log(outDesc.green );
-            }
+			{
+				name: 'modDept',
+				type: 'list',
+				message: 'What is the department?',
+				choices: deptnames
+			},
+			{
+				name: 'modOver',
+				type: 'input',
+				message: "What is the new departmental overhead?",
+				validate: validateInteger,
+			},
 
-             //recursive call to determine next action
-            determineAction()
+		]).then(function(answers) {
+			
+			//connect to the mysql database and update the information in the departments table
+					
+				
+			var sql = 'UPDATE departments SET overhead_costs = ? where dept_name = ?'
+			connection.query(sql, [parseInt(answers.modOver), answers.modDept], function(err, result){
+				if (err) {
+					console.log(err)
+					undoSQL() 
+				}
+				
+				// commit DB changes in case of future error, then changes up to this point are saved
+				connection.query('COMMIT', function(err, response) {
+					if (err) {
+						console.log(err)
+						undoSQL() 
+					}
+
+				});
+			
+			});
+			outDesc = 'Department ' + answers.modDept + ' now has a ' + answers.modOver + ' overhead'
+			console.log(outDesc.green );
+		
+
+				//recursive call to determine next action
+			determineAction()
+			
 		});
-	});
+
+	})
 }
 
 function newDept() {
@@ -156,12 +168,16 @@ function newDept() {
         {
             name: "adddeptName",
             type: "input",
-            message: "What department would you like to add?"
+			message: "What department would you like to add?",
+			validate: function validateAlpha(name){
+				return name !== '';
+			}
 		}, 
 		{
             name: 'adddeptOver',
             type: 'input',
-            message: "How much overhead does the department take?"
+			message: "How much overhead does the department take?",
+			validate: validateInteger,
         }
     ]).then(function(answers) {
         
@@ -211,83 +227,72 @@ function newDept() {
 //function to delete a department
 function deleteDept() {
 
-	inquirer.prompt([
+	var deptnames = [];
 
-        {
-            name: "deleteId",
-            type: "input",
-            message: "What is the dept number of the department you wish to delete?"
-        }, 
+	var sql = 'SELECT dept_name FROM departments'
+	connection.query(sql, function(err, result){
 
-    ]).then(function(answers) {
+		if(err) throw err;
+		for(var i = 0; i<result.length; i++){
+			deptnames.push(result[i].dept_name);
+		}
+	
+		inquirer.prompt([
 
-        var sql = 'SELECT dept_name FROM departments WHERE dept = ?'
-		connection.query(sql, [answers.deleteId], function(err, result){
-			if (err) {
-				console.log(err)
-				undoSQL() 
-			}
+			{
+				name: "deleteId",
+				type: "list",
+				message: "Which department do you want to delete?",
+				choices: deptnames
+			}, 
 
-			if (result.length < 0) {
-				console.log('Invalid department: ' + answers.deleteId + 'Try again!'.red);
-				
-				//recursive call to determine next action 
-				determineAction()
-			}
+		]).then(function(answers) {
 
-            //determine if any products are still in this department. Cannot delete if yes.
-            var sql = 'SELECT department_name FROM PRODUCTS WHERE department_name = ?'
-            connection.query(sql, [result[0].dept_name], function(err, result){
-                if (err) {
-                    console.log(err)
-                    undoSQL() 
-                }
-                if (result.length > 0) {
-
-                    outDesc = 'Products still exist with department name ' + result[0].dept_name + 'Products must be removed first!'
-                    console.log(outDesc.red);
-                    
-                    //recursive call to determine next action 
-                    determineAction()
-                }
-            });
-						
-		});
-        
-		//connect to the mysql database and delete the department
-		var sql = 'DELETE FROM departments WHERE dept = ?'
-		connection.query(sql, [answers.deleteId], function(err, result){
-			if (err) {
-				console.log(err)
-				undoSQL() 
-			}
-
-			if (result.length < 0) {
-                outDesc = 'Invalid department: ' + answers.deleteId + 'Try again!'
-				console.log(outDesc.red);
-				
-				//recursive call to determine next action 
-				determineAction()
-			}
-
-            outDesc = 'Department ' + answers.deleteId + ' has been removed'
-			console.log(outDesc.green );
-
-			// commit DB changes in case of future error, then changes up to this point are saved
-			connection.query('COMMIT', function(err, response) {
+			//determine if any products are still in this department. Cannot delete if yes.
+			var sql = 'SELECT * FROM PRODUCTS WHERE department_name = ?'
+			connection.query(sql, [answers.deleteId], function(err, result){
 				if (err) {
 					console.log(err)
 					undoSQL() 
 				}
+				if (result.length > 0) {
 
+					outDesc = 'Products still exist with department name ' + answers.deleteId + '. Products must be removed first!'
+					console.log(outDesc.red);
+					
+					//recursive call to determine next action 
+					determineAction()
+				}
+				else {
+
+					//connect to the mysql database and delete the department
+					var sql = 'DELETE FROM departments WHERE dept_name = ?'
+					connection.query(sql, [answers.deleteId], function(err, result){
+						if (err) {
+							console.log(err)
+							undoSQL() 
+						}
+						
+						outDesc = 'Department ' + answers.deleteId + ' has been removed'
+						console.log(outDesc.green );
+
+						// commit DB changes in case of future error, then changes up to this point are saved
+						connection.query('COMMIT', function(err, response) {
+							if (err) {
+								console.log(err)
+								undoSQL() 
+							}
+
+						});
+
+						//recursive call to determine next action 
+						determineAction()
+				
+					});
+				}
 			});
-
-			//recursive call to determine next action 
-			determineAction()
-			
 		});
-	});
-			
+	})
 }
 
 // function to rollback any updates if a DB error occurs
@@ -297,3 +302,28 @@ function undoSQL() {
 		if (err) { console.log(err) }
 
 })}
+
+// validateInteger makes sure that the user is supplying only positive integers for their inputs
+function validateInteger(value) {
+	var integer = Number.isInteger(parseFloat(value));
+	var sign = Math.sign(value);
+
+	if (integer && (sign === 1)) {
+		return true;
+	} else {
+		return 'Please enter a whole non-zero number.';
+	}
+}
+
+// validateNumeric makes sure that the user is supplying only positive numbers for their inputs
+function validateNumeric(value) {
+	// Value must be a positive number
+	var number = (typeof parseFloat(value)) === 'number';
+	var positive = parseFloat(value) > 0;
+
+	if (number && positive) {
+		return true;
+	} else {
+		return 'Please enter a positive number.'
+	}
+}
