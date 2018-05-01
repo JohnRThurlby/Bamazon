@@ -8,7 +8,7 @@ Usage: node bamazonCustomer.js
 2. As a manager:    can view the available products, can view those products with low inventory, add stock to a product, add a new product, and remove a product. In the product low inventory view, those products with less that 50% of the inventory limit requested have the inventory shown in red, otherwise it is shown in yellow.  
 Usage: node bamazonManager.js 
 
-3. As a supervisor: can view the departmental sales, can modify the overhead costs for a department, add a new department, remove a  department, but only if no products are still in tht department. In the departmental sales view, if a product has less than zero profit, the amount is displayed in red. 
+3. As a supervisor: can view the departmental sales, can modify the overhead costs for a department, add a new department, remove a  department, but only if no products are still in that department. In the departmental sales view, if a product has less than zero profit, the amount is displayed in red.
 Usage: node bamazonSupervisor.js
 
 Short video showing usage and output:

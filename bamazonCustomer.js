@@ -1,16 +1,20 @@
-const mysql = require('mysql');
-const inquirer = require('inquirer');
-const colors = require('colors');
-const Table = require('cli-table');
+const mysql = require('mysql')
+const inquirer = require('inquirer')
+const colors = require('colors')
+const Table = require('cli-table')
+const nodemailer = require('nodemailer');
 
 var currentUser = " "
+var outDesc = " "
+var mailOptions = " " 
+var outEmail = " "
 
 var chars = {
 	'top': '═', 'top-mid': '╤', 'top-left': '╔', 'top-right': '╗',
 	'bottom': '═', 'bottom-mid': '╧', 'bottom-left': '╚',
 	'bottom-right': '╝', 'left': '║', 'left-mid': '╟', 'mid': '─',
 	'mid-mid': '┼', 'right': '║', 'right-mid': '╢', 'middle': '│'
-  };
+  }
 
 const connection = mysql.createConnection({
 	host: 'localhost',
@@ -25,6 +29,14 @@ connection.connect(function(err) {
 	checkUser()
 });
 
+var transporter = nodemailer.createTransport({
+	service: 'gmail',
+	auth: {
+	  user: 'bamazonucf@gmail.com',
+	  pass: 'bamazon01!'
+	}
+  });
+
 //connect to the mysql database and pull the information from the Products database to display to the user
 function displayProducts() {
 	
@@ -35,7 +47,7 @@ function displayProducts() {
 		if(err) console.log(err);
 
 		//creates a table for the information from the mysql database to be placed
-		console.log('>>>>>>Products Available for Purchase<<<<<<'.blue);
+		console.log('>>>>>>Products Available for Purchase<<<<<<'.blue)
 		var table = new Table({
 			head: ['Item Id#', 'Product Name', 'Price'],
 			chars: chars,
@@ -44,7 +56,7 @@ function displayProducts() {
 				head: ['blue'],
 				compact: false
 			}
-		});
+		})
 
 		//loops through each item in the mysql database and pushes that information into a new row in the table
 		
@@ -67,7 +79,7 @@ function displayPurchased() {
 
 	connection.query(sql, [currentUser], function(err, result){
 
-		if(err) console.log(err);
+		if(err) console.log(err)
 
 		//creates a table for the information from the mysql database to be placed
 		console.log('>>>>>>Products Purchased<<<<<<'.blue);
@@ -88,7 +100,7 @@ function displayPurchased() {
 			}
 			//show the purchased product info in tabular form
 
-			console.log(table.toString());
+			console.log(table.toString())
 
 		}
 		else{ 
@@ -148,7 +160,8 @@ function purchase(itemNeeded, quantityNeeded) {
             //inform user sale is okay, and how much it will cost
 			
 			console.log("We have enough in stock. We will ship your order right out!".green);
-            console.log("Your total cost for " + quantityNeeded + response[0].product_name + " is " + totalCustcost + ". Thank you for doing business with us!".green);
+			outDesc = "Your total cost for " + quantityNeeded + " " + response[0].product_name + " is " + totalCustcost + ". Thank you for doing business with us!" 
+            console.log(outDesc.green);
 			
 			//update product table minus purchased quantity for stock and how mucgh sales are for this product
 			var stockUpdate = response[0].stock_qty - quantityNeeded
@@ -201,15 +214,36 @@ function purchase(itemNeeded, quantityNeeded) {
 					}
 
 				});
+
+				inquirer.prompt([
+					{
+						name: 'emailAddr',
+						type: 'input',
+						message: 'If you would like an email receipt, please enter an email',
+					}
+				]).then(function(answers){ 
+						
+						if (answers.emailAddr !== '') {
+							outEmail = answers.emailAddr
+							mailOptions = {
+								from: 'bamazonUCF@gmail.com',
+								to: answers.emailAddr, 
+								subject: 'Purchase from Bamazon',
+								text: outDesc
+							};
+							deliverMail()
+						}
+						else determineAction();
+					});
 			});
-		
 		} 
 		else {
 			//Tell customer, not enough stock for purchase. 
-            console.log("Sorry, we do not have enough of " + response[0].product_name + " to fulfill your order.".red);
+		   	console.log("Sorry, we do not have enough of " + response[0].product_name + " to fulfill your order.".red);
+			determineAction();
 		};
 		
-        displayProducts();
+        
     });
 
 }
@@ -388,4 +422,16 @@ function validateNumeric(value) {
 	} else {
 		return 'Please enter a positive number.'
 	}
+}
+
+function deliverMail() {
+
+	transporter.sendMail(mailOptions, function(err, info){
+	if (err) {
+		console.log(err);
+	} else {
+		console.log('Email sent to ' + outEmail);
+		determineAction();
+	}
+	});
 }
