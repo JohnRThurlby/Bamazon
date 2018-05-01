@@ -1,10 +1,15 @@
 ### Overview
 
-This is an Amazon-like storefront application. The app will take in orders from customers and deplete stock from the store's inventory. As a bonus task, you can program your app to track product sales across your store's departments and then provide a summary of the highest-grossing departments in the store.
+This is an Amazon-like storefront application. There are three possible paths:
 
-Usage: 
+1. As a customer:   can view what products are for sale, purchase a product, and view the products they have purchased. 
+Usage: node bamazonCustomer.js
 
-node index.js 
+2. As a manager:    can view the available products, can view those products with low inventory, add stock to a product, add a new product, and remove a product. In the product low inventory view, those products with less that 50% of the inventory limit requested have the inventory shown in red, otherwise it is shown in yellow.  
+Usage: node bamazonManager.js 
+
+3. As a supervisor: can view the departmental sales, can modify the overhead costs for a department, add a new department, remove a  department, but only if no products are still in tht department. In the departmental sales view, if a product has less than zero profit, the amount is displayed in red. 
+Usage: node bamazonSupervisor.js
 
 Short video showing usage and output:
 
@@ -12,9 +17,7 @@ Short video showing usage and output:
 
 Software used: 
 
-<img src="/nodejs_logo.png" width="256" height="256" title="NodeJS"><img src="/npm-logo.png" width="256" height="256" title="Node Package Manager">
+<img src="/nodejs_logo.png" width="256" height="256" title="NodeJS"><img src="/npm-logo.png" width="256" height="256" title="Node Package Manager"><img src="/inquirer.png" width="256" height="256" title="Inquirer">
 
-<img src="/inquirer.png" width="256" height="256" title="Inquirer"><img src="/mysql.png" width="256" height="256" title="MySQL">
-
-<img src="/cli-tables.png" width="256" height="256" title="CLI Tables"><img src="/colors.png" width="256" height="256" title="Colors">
+<img src="/mysql.png" width="256" height="256" title="MySQL"><img src="/cli-tables.png" width="256" height="256" title="CLI Tables"><img src="/colors.png" width="256" height="256" title="Colors">
 

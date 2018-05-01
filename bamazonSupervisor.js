@@ -87,10 +87,17 @@ function displaySales() {
 
         //loops through each item in the mysql database and pushes that information into a new row in the table
         
-		for(var i = 0; i < result.length; i++){
-			table.push(
-				[result[i].dept, result[i].dept_name, result[i].overhead_costs, result[i].dept_sales, result[i].profit]
-			);
+		for (var i = 0; i < result.length; i++){
+			if (result[i].profit < 0){
+				table.push(
+					[result[i].dept, result[i].dept_name, result[i].overhead_costs, result[i].dept_sales, colors.red(result[i].profit)]
+				);
+			}
+			else {
+				table.push(
+					[result[i].dept, result[i].dept_name, result[i].overhead_costs, result[i].dept_sales, colors.green.bold(result[i].profit)]
+				)
+			}
 		}
 		//show the product info in tabular form
 		console.log(table.toString());

@@ -132,9 +132,19 @@ function displayLowproducts() {
 		
 				//loops through each item in the mysql database and pushes that information into a new row in the table
 				for(var i = 0; i < result.length; i++){
-					table.push(
+					if ( result[i].stock_qty < (parseInt(answers.lowstockLevel) / 2))
+					{
+						table.push(
 						[result[i].item, result[i].product_name, result[i].price, colors.red(result[i].stock_qty), result[i].product_sales ]
 					);
+					}
+					else 
+					{
+						table.push(
+						[result[i].item, result[i].product_name, result[i].price, colors.yellow(result[i].stock_qty), result[i].product_sales ]
+						);
+					}
+					
 				}
 
 				//show the product info in tabular form
