@@ -1,13 +1,19 @@
-const mysql = require('mysql')
-const inquirer = require('inquirer')
-const colors = require('colors')
-const Table = require('cli-table')
-const nodemailer = require('nodemailer');
+//Written by John R. Thurlby April/May 2018
 
-var currentUser = " "
-var outDesc = " "
-var mailOptions = " " 
-var outEmail = " "
+require("dotenv").config()
+const keys = require("./keys.js"),
+      mysql = require('mysql'),
+      inquirer = require('inquirer'),
+      colors = require('colors'),
+      Table = require('cli-table')
+	  nodemailer = require('nodemailer'),
+	  mysqlPass = keys.sqlAccess
+	  emailPass = keys.emailAccess
+
+var currentUser = " ",
+    outDesc = " ",
+    mailOptions = " ", 
+    outEmail = " "
 
 var chars = {
 	'top': '═', 'top-mid': '╤', 'top-left': '╔', 'top-right': '╗',
@@ -19,7 +25,7 @@ var chars = {
 const connection = mysql.createConnection({
 	host: 'localhost',
 	user: 'root',
-	password: 'Noelrr01',
+	password: mysqlPass.sql_pass,
 	database: 'bamazon' 
 })
 
@@ -33,7 +39,7 @@ var transporter = nodemailer.createTransport({
 	service: 'gmail',
 	auth: {
 	  user: 'bamazonucf@gmail.com',
-	  pass: 'bamazon01!'
+	  pass: emailPass.email_pass
 	}
   });
 
@@ -44,7 +50,7 @@ function displayProducts() {
 
 	connection.query(sql, function(err, result){
 
-		if(err) console.log(err);
+		if(err) console.log(err)
 
 		//creates a table for the information from the mysql database to be placed
 		console.log('>>>>>>Products Available for Purchase<<<<<<'.blue)
@@ -65,7 +71,7 @@ function displayProducts() {
 		}
 		//show the product info in tabular form
 
-		console.log(table.toString());
+		console.log(table.toString())
 		
 		//determine what customer wants to do
 		determineAction()
@@ -82,7 +88,7 @@ function displayPurchased() {
 		if(err) console.log(err)
 
 		//creates a table for the information from the mysql database to be placed
-		console.log('>>>>>>Products Purchased<<<<<<'.blue);
+		console.log('>>>>>>Products Purchased<<<<<<'.blue)
 		var table = new Table({
 			head: ['Product Name', 'Purchase Price', 'Purchased Quantity', 'Total Cost'],
 			chars: chars,
@@ -105,7 +111,7 @@ function displayPurchased() {
 		}
 		else{ 
 
-			console.log('You have not purchased any products yet.... Time to shop!'.red);
+			console.log('You have not purchased any products yet.... Time to shop!'.red)
 
 		}
 		
@@ -122,21 +128,20 @@ function determinePurchase() {
 			name: 'itemId',
 			type: 'input',
 			message: 'Enter an item ID of the product you want to purchase',
-			validate: validateInteger,
-			filter: Number
+			validate: validateInteger
 		},
 		{
 			name: 'quantity',
 			type: 'input',
 			message: 'How many would you like to purchase?',
 			validate: validateNumeric
-		},
+		}
 		]).then(function(answers){ 
 
 			//set captured input as variables, pass variables as parameters.
-			var quantityNeeded = parseInt(answers.quantity);
-			var itemNeeded = answers.itemId;
-			purchase(itemNeeded, quantityNeeded);
+			var quantityNeeded = parseInt(answers.quantity)
+			var itemNeeded = answers.itemId
+			purchase(itemNeeded, quantityNeeded)
 				
 		}
 	);
@@ -145,23 +150,23 @@ function determinePurchase() {
 //function to perform purchase
 function purchase(itemNeeded, quantityNeeded) {
 
-	// get the item picked
+	// get the product picked
 	var sql = 'SELECT * FROM products WHERE item = ?'
 
-	connection.query(sql, [itemNeeded], function(error, response) {
-        if (error) { console.log(error) };
+	connection.query(sql, [itemNeeded], function(err, response) {
+        if (err) { console.log(err) }
 
         //there is enough in stock for purchase to continue
         if (quantityNeeded <= response[0].stock_qty) {
 			
 			//calculate cost
-			var totalCustcost = response[0].price * quantityNeeded;
+			var totalCustcost = response[0].price * quantityNeeded
 			var saveDepartment = response[0].department_name 
             //inform user sale is okay, and how much it will cost
 			
 			console.log("We have enough in stock. We will ship your order right out!".green);
 			outDesc = "Your total cost for " + quantityNeeded + " " + response[0].product_name + " is " + totalCustcost + ". Thank you for doing business with us!" 
-            console.log(outDesc.green);
+            console.log(outDesc.green)
 			
 			//update product table minus purchased quantity for stock and how mucgh sales are for this product
 			var stockUpdate = response[0].stock_qty - quantityNeeded
@@ -220,6 +225,7 @@ function purchase(itemNeeded, quantityNeeded) {
 						name: 'emailAddr',
 						type: 'input',
 						message: 'If you would like an email receipt, please enter an email',
+						validate: validateEmail
 					}
 				]).then(function(answers){ 
 						
@@ -233,19 +239,17 @@ function purchase(itemNeeded, quantityNeeded) {
 							};
 							deliverMail()
 						}
-						else determineAction();
-					});
+						else determineAction()
+				});
 			});
 		} 
 		else {
 			//Tell customer, not enough stock for purchase. 
-		   	console.log("Sorry, we do not have enough of " + response[0].product_name + " to fulfill your order.".red);
-			determineAction();
+			outDesc = "Sorry, we do not have enough of " + response[0].product_name + " to fulfill your order."
+		   	console.log(outDesc.red)
+			determineAction()
 		};
-		
-        
-    });
-
+	});
 }
 
 // function to rollback any updates if a DB error occurs
@@ -281,7 +285,7 @@ function determineAction() {
 					break
 
 				case('Exit'):
-					connection.end();
+					connection.end()
 					process.exit(1)
 					break
 		}
@@ -324,17 +328,13 @@ function newUser() {
 			name: 'newuserId',
 			type: 'input',
 			message: 'Enter a userId',
-			validate: function validateAlpha(name){
-				return name !== '';
-			}
+			validate: validateAlpha
 		},
 		{
 			name: 'newuserPassword',
 			type: 'password',
 			message: 'Enter a password',
-			validate: function validateAlpha(name){
-				return name !== '';
-			}
+			validate: validateAlpha
 		}	
 		]).then(function(answers){ 
 
@@ -358,23 +358,19 @@ function existingUser() {
 			name: 'curuserId',
 			type: 'input',
 			message: 'Enter a userId',
-			validate: function validateAlpha(name){
-				return name !== '';
-			}
+			validate: validateAlpha
 		},
 		{
 			name: 'curPassword',
 			type: 'password',
 			message: 'Enter a password',
-			validate: function validateAlpha(name){
-				return name !== '';
-			}
+			validate: validateAlpha
 		}	
 		]).then(function(answers){ 
 			
 			var name = answers.curuserId
 			var pass = answers.curPassword
-			var sql = 'SELECT * FROM users WHERE username = ? AND userpassword = ?';
+			var sql = 'SELECT * FROM users WHERE username = ? AND userpassword = ?'
 			connection.query(sql, [name, pass], function(error, result) {
 				if (error) { console.log(error) };
 
@@ -394,44 +390,73 @@ function existingUser() {
 					determineAction()
 
 				}
-					
-			});
+			})
 		})
 }
 
 // validateInteger makes sure that the user is supplying only positive integers for their inputs
 function validateInteger(value) {
-	var integer = Number.isInteger(parseFloat(value));
-	var sign = Math.sign(value);
+	var integer = Number.isInteger(parseFloat(value))
+	var sign = Math.sign(value)
 
 	if (integer && (sign === 1)) {
-		return true;
+		return true
 	} else {
-		return 'Please enter a whole non-zero number.';
+		return 'Please enter a whole non-zero number.'
 	}
 }
 
 // validateNumeric makes sure that the user is supplying only positive numbers for their inputs
 function validateNumeric(value) {
 	// Value must be a positive number
-	var number = (typeof parseFloat(value)) === 'number';
-	var positive = parseFloat(value) > 0;
+	var number = (typeof parseFloat(value)) === 'number'
+	var positive = parseFloat(value) > 0
 
 	if (number && positive) {
-		return true;
+		return true
 	} else {
 		return 'Please enter a positive number.'
 	}
 }
 
 function deliverMail() {
-
+			
 	transporter.sendMail(mailOptions, function(err, info){
-	if (err) {
-		console.log(err);
-	} else {
-		console.log('Email sent to ' + outEmail);
-		determineAction();
-	}
+		try {
+			outDesc = 'Email sent to ' + outEmail 
+			console.log(outDesc.green)
+			determineAction();
+					}
+		catch (Exception) {
+			if (err) {
+				console.log(err)
+			console.log("Email is not responding".red)
+			determineAction()
+			}
+		}
 	});
+}
+
+// validateAlpha makes sure that the user is supplying only alpha, numeric, dash or space
+function validateAlpha(value) {
+	
+	if (value == value.match(/^[-a-zA-Z0-9- ]+$/)) {
+		return true
+	} else {
+		return 'Only letters, Numbers & Space/dash Allowed.'
+	}
+}
+
+// validateAlpha makes sure that the user is supplying only alpha, numeric, dash or space
+function validateEmail(value) {
+	
+	if (value.match(/^([\w-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/)){
+		return true
+	}
+	else if (value == ''){
+		return true
+		}
+		else {
+			return 'Enter a valid email format.'
+		}
 }

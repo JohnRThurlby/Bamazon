@@ -1,14 +1,19 @@
-const mysql = require('mysql');
-const inquirer = require('inquirer');
-const colors = require('colors');
-const Table = require('cli-table');
+//Written by John R. Thurlby April/May 2018
+
+require("dotenv").config()
+const keys = require("./keys.js"),
+	  mysql = require('mysql'),
+	  inquirer = require('inquirer'),
+	  colors = require('colors'),
+	  Table = require('cli-table'),
+	  mysqlPass = keys.sqlAccess
 
 const connection = mysql.createConnection({
 	host: 'localhost',
 	user: 'root',
-	password: 'Noelrr01',
+	password: mysqlPass.sql_pass,
 	database: 'bamazon' 
-});
+})
 
 var outDesc = " " 
 
@@ -17,13 +22,13 @@ var chars = {
 	'bottom': '═', 'bottom-mid': '╧', 'bottom-left': '╚',
 	'bottom-right': '╝', 'left': '║', 'left-mid': '╟', 'mid': '─',
 	'mid-mid': '┼', 'right': '║', 'right-mid': '╢', 'middle': '│'
-  };
+  }
 
 // connection to DB, and start by displaying possible actions
 connection.connect(function(err) {
 	if (err) throw err;
 	determineAction()
-});
+})
 
 //fuction to determine what manager wnats to do.
 function determineAction() {
@@ -57,11 +62,9 @@ function determineAction() {
 				case('Exit'):
 					process.exit(1)
 					break
-
 			}
-				
 		}
-	);
+	)
 }
 
 //display sales from deparment table via view that uses alaias to calculate profit
@@ -71,10 +74,10 @@ function displaySales() {
 
 	var sql = 'SELECT * FROM totalsales'
 	connection.query(sql, function(err, result){
-		if(err) console.log(err);
+		if(err) console.log(err)
 
 		//creates a table for the information from the mysql database to be placed
-		console.log('>>>>>>Product Sales<<<<<<'.blue);
+		console.log('>>>>>>Product Sales<<<<<<'.blue)
 		var table = new Table({
 			head: ['Dept Id#', 'Department Name', 'Overhead Costs', 'Sales', 'Profit'],
 			chars: chars,
@@ -100,7 +103,7 @@ function displaySales() {
 			}
 		}
 		//show the product info in tabular form
-		console.log(table.toString());
+		console.log(table.toString())
 
 		//recursive call to determine next action 
 		determineAction()
@@ -110,7 +113,7 @@ function displaySales() {
 //function to allow more stock to be added to a product
 function modifyOverhead() {
 
-	var deptnames = [];
+	var deptnames = []
 
 	connection.query('SELECT dept_name FROM departments', function(err, result){
 	if(err) throw err;
@@ -132,13 +135,11 @@ function modifyOverhead() {
 				type: 'input',
 				message: "What is the new departmental overhead?",
 				validate: validateInteger,
-			},
-
+			}
 		]).then(function(answers) {
 			
 			//connect to the mysql database and update the information in the departments table
-					
-				
+		
 			var sql = 'UPDATE departments SET overhead_costs = ? where dept_name = ?'
 			connection.query(sql, [parseInt(answers.modOver), answers.modDept], function(err, result){
 				if (err) {
@@ -157,52 +158,44 @@ function modifyOverhead() {
 			
 			});
 			outDesc = 'Department ' + answers.modDept + ' now has a ' + answers.modOver + ' overhead'
-			console.log(outDesc.green );
-		
-
+			console.log(outDesc.green )
 				//recursive call to determine next action
 			determineAction()
-			
-		});
-
+		})
 	})
 }
 
 function newDept() {
 
 	inquirer.prompt([
-
         {
             name: "adddeptName",
             type: "input",
 			message: "What department would you like to add?",
-			validate: function validateAlpha(name){
-				return name !== '';
-			}
+			validate: validateAlpha
 		}, 
 		{
             name: 'adddeptOver',
             type: 'input',
 			message: "How much overhead does the department take?",
-			validate: validateInteger,
+			validate: validateInteger
         }
     ]).then(function(answers) {
-        
 
 		var sql = 'SELECT * FROM departments WHERE dept_name = ?'
 
 		connection.query(sql, [answers.adddeptName], function(err, result){
-			   if(err) console.log(err);
+			   if(err) console.log(err)
 			   
 			   //Department already exists. 
 			   if (result.length > 0) {
                 outDesc = 'Department aready exists: ' + answers.adddeptName + 'Try again!'
-				console.log(outDesc.red);
+				console.log(outDesc.red)
 				
 				//recursive call to determine next action 
 				determineAction()
 			}
-		});  // end of select department
+		})  // end of select department
 
 		//add new department into the department table
 		var sql = 'INSERT INTO departments SET dept_name = ?, overhead_costs = ?'	
@@ -213,7 +206,7 @@ function newDept() {
 			}
             
             outDesc = 'Department ' + answers.adddeptName + ' with overhead of ' + answers.adddeptOver + ' is added to the department list'
-			console.log(outDesc.green );
+			console.log(outDesc.green )
 			
 			// commit DB changes in case of future error, then changes up to this point are saved
 			connection.query('COMMIT', function(err, response) {
@@ -225,16 +218,14 @@ function newDept() {
 
 			//recursive call to determine next action 
 			determineAction()
-
-		});  //end to insert connection
-		
-	}); //end of inquirer
+		})  //end to insert connection
+	}) //end of inquirer
 }
 
 //function to delete a department
 function deleteDept() {
 
-	var deptnames = [];
+	var deptnames = []
 
 	var sql = 'SELECT dept_name FROM departments'
 	connection.query(sql, function(err, result){
@@ -245,14 +236,12 @@ function deleteDept() {
 		}
 	
 		inquirer.prompt([
-
 			{
 				name: "deleteId",
 				type: "list",
 				message: "Which department do you want to delete?",
 				choices: deptnames
-			}, 
-
+			} 
 		]).then(function(answers) {
 
 			//determine if any products are still in this department. Cannot delete if yes.
@@ -265,7 +254,7 @@ function deleteDept() {
 				if (result.length > 0) {
 
 					outDesc = 'Products still exist with department name ' + answers.deleteId + '. Products must be removed first!'
-					console.log(outDesc.red);
+					console.log(outDesc.red)
 					
 					//recursive call to determine next action 
 					determineAction()
@@ -281,7 +270,7 @@ function deleteDept() {
 						}
 						
 						outDesc = 'Department ' + answers.deleteId + ' has been removed'
-						console.log(outDesc.green );
+						console.log(outDesc.green )
 
 						// commit DB changes in case of future error, then changes up to this point are saved
 						connection.query('COMMIT', function(err, response) {
@@ -289,16 +278,15 @@ function deleteDept() {
 								console.log(err)
 								undoSQL() 
 							}
-
-						});
+						})
 
 						//recursive call to determine next action 
 						determineAction()
 				
-					});
+					})
 				}
-			});
-		});
+			})
+		})
 	})
 }
 
@@ -313,24 +301,34 @@ function undoSQL() {
 // validateInteger makes sure that the user is supplying only positive integers for their inputs
 function validateInteger(value) {
 	var integer = Number.isInteger(parseFloat(value));
-	var sign = Math.sign(value);
+	var sign = Math.sign(value)
 
 	if (integer && (sign === 1)) {
-		return true;
+		return true
 	} else {
-		return 'Please enter a whole non-zero number.';
+		return 'Please enter a whole non-zero number.'
 	}
 }
 
 // validateNumeric makes sure that the user is supplying only positive numbers for their inputs
 function validateNumeric(value) {
 	// Value must be a positive number
-	var number = (typeof parseFloat(value)) === 'number';
-	var positive = parseFloat(value) > 0;
+	var number = (typeof parseFloat(value)) === 'number'
+	var positive = parseFloat(value) > 0
 
 	if (number && positive) {
-		return true;
+		return true
 	} else {
 		return 'Please enter a positive number.'
+	}
+}
+
+// validateAlpha makes sure that the user is supplying only alpha, numeric, dash or space
+function validateAlpha(value) {
+	
+	if (value == value.match(/^[-a-zA-Z0-9- ]+$/)) {
+		return true
+	} else {
+		return 'Only letters, Numbers & Space/dash Allowed.'
 	}
 }

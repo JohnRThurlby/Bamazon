@@ -1,27 +1,32 @@
-const mysql = require('mysql');
-const inquirer = require('inquirer');
-const colors = require('colors');
-const Table = require('cli-table');
+//Written by John R. Thurlby April/May 2018
+
+require("dotenv").config()
+const keys = require("./keys.js"),
+	  mysql = require('mysql'),
+	  inquirer = require('inquirer'),
+	  colors = require('colors'),
+	  Table = require('cli-table'),
+	  mysqlPass = keys.sqlAccess
 
 var chars = {
 	'top': '═', 'top-mid': '╤', 'top-left': '╔', 'top-right': '╗',
 	'bottom': '═', 'bottom-mid': '╧', 'bottom-left': '╚',
 	'bottom-right': '╝', 'left': '║', 'left-mid': '╟', 'mid': '─',
 	'mid-mid': '┼', 'right': '║', 'right-mid': '╢', 'middle': '│'
-  };
+  }
 
 const connection = mysql.createConnection({
 	host: 'localhost',
 	user: 'root',
-	password: 'Noelrr01',
+	password: mysqlPass.sql_pass,
 	database: 'bamazon' 
-});
+})
 
 // connection to DB, and start by displaying possible actions
 connection.connect(function(err) {
 	if (err) throw err;
 	determineAction()
-});
+})
 
 //fuction to determine what manager wnats to do.
 function determineAction() {
@@ -59,11 +64,9 @@ function determineAction() {
 				case('Exit'):
 					process.exit(1)
 					break
-
 			}
-				
 		}
-	);
+	)
 }
 
 //display products for sale from products table
@@ -73,10 +76,10 @@ function displayProducts() {
 
 	var sql = 'SELECT * FROM products'
 	connection.query(sql, function(err, result){
-		if(err) console.log(err);
+		if(err) console.log(err)
 
 		//creates a table for the information from the mysql database to be placed
-		console.log('>>>>>>Products Available<<<<<<'.blue);
+		console.log('>>>>>>Products Available<<<<<<'.blue)
 		var table = new Table({
 			head: ['Product Id#', 'Product Name', 'Price', 'Stock Quantity', 'Sales'],
 			chars: chars,
@@ -85,16 +88,16 @@ function displayProducts() {
 				head: ['blue'],
 				compact: false
 			}
-		});
+		})
 
 		//loops through each item in the mysql database and pushes that information into a new row in the table
 		for(var i = 0; i < result.length; i++){
 			table.push(
 				[result[i].item, result[i].product_name, result[i].price, result[i].stock_qty, result[i].product_sales]
-			);
+			)
 		}
 		//show the product info in tabular form
-		console.log(table.toString());
+		console.log(table.toString())
 
 		//recursive call to determine next action 
 		determineAction()
@@ -116,10 +119,10 @@ function displayLowproducts() {
 			var sql = 'SELECT * FROM products WHERE stock_qty < ?'
 
 			connection.query(sql, [parseInt(answers.lowstockLevel)], function(err, result){
-				if(err) console.log(err);
+				if(err) console.log(err)
 		
 				//creates a table for the information from the mysql database to be placed
-				console.log('>>>>>>Low Stock<<<<<<'.blue);
+				console.log('>>>>>>Low Stock<<<<<<'.blue)
 				var table = new Table({
 					head: ['Product Id#', 'Product Name', 'Price', 'Stock Quantity','Sales'],
 					chars: chars,
@@ -128,7 +131,7 @@ function displayLowproducts() {
 						head: ['blue'],
 						compact: false
 					}
-				});
+				})
 		
 				//loops through each item in the mysql database and pushes that information into a new row in the table
 				for(var i = 0; i < result.length; i++){
@@ -136,32 +139,30 @@ function displayLowproducts() {
 					{
 						table.push(
 						[result[i].item, result[i].product_name, result[i].price, colors.red(result[i].stock_qty), result[i].product_sales ]
-					);
+						)
 					}
 					else 
 					{
 						table.push(
 						[result[i].item, result[i].product_name, result[i].price, colors.yellow(result[i].stock_qty), result[i].product_sales ]
-						);
+						)
 					}
-					
 				}
 
 				//show the product info in tabular form
-				console.log(table.toString());
+				console.log(table.toString())
 
 				//recursive call to determine next action 
 				determineAction()
-			});
+			})
 		}
-	);
+	)
 }
 
 //function to allow more stock to be added to a product
 function addTostock() {
 
 	inquirer.prompt([
-
         {
             name: "addtoId",
             type: "input",
@@ -172,18 +173,17 @@ function addTostock() {
             type: 'input',
 			message: "How much stock would you like to add?",
 			validate: validateInteger
-        },
-
+        }
     ]).then(function(answers) {
         
 		//connect to the mysql database and pull the information from the Products database to display to the user
 		var sql = 'SELECT * FROM products WHERE item = ?'
 
 		connection.query(sql, [answers.addtoId], function(err, result){
-			if(err) console.log(err);
+			if(err) console.log(err)
 			   
 			if (result.length < 0) {
-				console.log('Invalid product number: ' + answers.addtoId + 'Try again!'.red);
+				console.log('Invalid product number: ' + answers.addtoId + 'Try again!'.red)
 				
 				//recursive call to determine next action 
 				determineAction()
@@ -221,13 +221,13 @@ function newProduct() {
 
 	 //get the department names
 
-	 var deptnames = [];
+	 var deptnames = []
 
 	connection.query('SELECT dept_name FROM departments', function(err, result){
-		if(err) throw err;
+		if(err) throw err
 
 		for(var i = 0; i<result.length; i++){
-			deptnames.push(result[i].dept_name);
+			deptnames.push(result[i].dept_name)
 		}
 	
 
@@ -237,9 +237,7 @@ function newProduct() {
 				name: 'addProd',
 				type: 'input',
 				message: 'What product name of the product you wish to add?',
-				validate: function validateAlpha(name){
-					return name !== '';
-				}
+				validate: validateAlpha
 			}, 
 			{
 				name: 'addDept',
@@ -260,16 +258,15 @@ function newProduct() {
 				validate: validateInteger
 			}
 		]).then(function(answers) {
-			
-
+		
 			var sql = 'SELECT * FROM products WHERE product_name = ?'
 
 			connection.query(sql, [answers.addProd], function(err, result){
-				if(err) console.log(err);
+				if(err) console.log(err)
 				
 				//Product name already exists. 
 				if (result.length > 0) {
-					console.log('Product already exists: ' + answers.addProd + 'Try again!'.red);
+					console.log('Product already exists: ' + answers.addProd + 'Try again!'.red)
 					
 					//recursive call to determine next action 
 					determineAction()
@@ -297,10 +294,8 @@ function newProduct() {
 				//recursive call to determine next action 
 				determineAction()
 
-			});  //end to insert connection
-			
-		}); //end of inquirer
-
+			})  //end to insert connection
+		}) //end of inquirer
 	})
 }
 
@@ -308,14 +303,12 @@ function newProduct() {
 function deleteProduct() {
 
 	inquirer.prompt([
-
         {
             name: "deleteId",
             type: "input",
 			message: "What is the product number of the product you wish to delete?",
 			validate: validateInteger
-        }, 
-
+        }
     ]).then(function(answers) {
         
 		//connect to the mysql database and delete the Product
@@ -327,13 +320,13 @@ function deleteProduct() {
 			}
 
 			if (result.length < 0) {
-				console.log('Invalid Product number: ' + answers.deleteId + 'Try again!'.red);
+				console.log('Invalid Product number: ' + answers.deleteId + 'Try again!'.red)
 				
 				//recursive call to determine next action 
 				determineAction()
 			}
 
-			console.log('Product ' + answers.deleteId + ' has been removed'.green );
+			console.log('Product ' + answers.deleteId + ' has been removed'.green )
 
 			// commit DB changes in case of future error, then changes up to this point are saved
 			connection.query('COMMIT', function(err, response) {
@@ -341,15 +334,12 @@ function deleteProduct() {
 					console.log(err)
 					undoSQL() 
 				}
-
-			});
+			})
 
 			//recursive call to determine next action 
 			determineAction()
-			
-		});
-	});
-			
+		})
+	})
 }
 
 // function to rollback any updates if a DB error occurs
@@ -362,25 +352,35 @@ function undoSQL() {
 
 // validateInteger makes sure that the user is supplying only positive integers for their inputs
 function validateInteger(value) {
-	var integer = Number.isInteger(parseFloat(value));
-	var sign = Math.sign(value);
+	var integer = Number.isInteger(parseFloat(value))
+	var sign = Math.sign(value)
 
 	if (integer && (sign === 1)) {
-		return true;
+		return true
 	} else {
-		return 'Please enter a whole non-zero number.';
+		return 'Please enter a whole non-zero number.'
 	}
 }
 
 // validateNumeric makes sure that the user is supplying only positive numbers for their inputs
 function validateNumeric(value) {
 	// Value must be a positive number
-	var number = (typeof parseFloat(value)) === 'number';
-	var positive = parseFloat(value) > 0;
+	var number = (typeof parseFloat(value)) === 'number'
+	var positive = parseFloat(value) > 0
 
 	if (number && positive) {
-		return true;
+		return true
 	} else {
 		return 'Please enter a positive number.'
+	}
+}
+
+// validateAlpha makes sure that the user is supplying only alpha, numeric, dash or space
+function validateAlpha(value) {
+	
+	if (value == value.match(/^[-a-zA-Z0-9- ]+$/)) {
+		return true
+	} else {
+		return 'Only letters, Numbers & Space/dash Allowed.'
 	}
 }
