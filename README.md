@@ -1,20 +1,25 @@
-### Overview
+<h2>Overview</h2>
 
 This is an Amazon-like storefront application. There are three possible paths:
 
-1. As a customer:   can view what products are for sale, purchase a product, and view the products they have purchased.  For a purchase, the customer can select to have a receipt emailed to them showing their purchase and its cost.
+1. As a customer:        can view what products are for sale, purchase a product, and view the products they have purchased.  For a purchase, the customer can select to have a receipt emailed to them showing their purchase and its cost.
 
-Usage: node bamazonCustomer.js
 
-2. As a manager:    can view the available products, can view those products with low inventory, add stock to a product, add a new product, and remove a product. In the product low inventory view, those products with less that 50% of the inventory limit requested have the inventory shown in red, otherwise it is shown in yellow. 
+        <h4>Usage: node bamazonCustomer.js</h4>
 
-Usage: node bamazonManager.js 
 
-3. As a supervisor: can view the departmental sales, can modify the overhead costs for a department, add a new department, remove a  department, but only if no products are still in that department. In the departmental sales view, if a product has less than zero profit, the amount is displayed in red.
+2. As a manager:         can view the available products, can view those products with low inventory, add stock to a product, add a new product, and remove a product. In the product low inventory view, those products with less that 50% of the inventory limit requested have the inventory shown in red, otherwise it is shown in yellow. 
 
-Usage: node bamazonSupervisor.js
 
-Short videos showing usage and output:
+        <h4>Usage: node bamazonManager.js</h4> 
+
+
+3. As a supervisor:     can view the departmental sales, can modify the overhead costs for a department, add a new department, remove a  department, but only if no products are still in that department. In the departmental sales view, if a product has less than zero profit, the amount is displayed in red.
+
+        <h4>Usage: node bamazonSupervisor.js</h4>
+
+
+<h2>Short videos showing usage and output:</h2>
 
 <h3>1. Customer:</h3>
 
@@ -29,9 +34,11 @@ Short videos showing usage and output:
 ![supervisor](https://user-images.githubusercontent.com/33644735/39631985-ca4380f2-4f81-11e8-917c-5ee2bae721d5.gif)
 
 
+
 <h3>PDF of email for Customer purchase:</h3>
 
 [Purchase from Bamazon.pdf](https://github.com/JohnRThurlby/Bamazon/files/1974725/Purchase.from.Bamazon.pdf)
+
 
 
 
