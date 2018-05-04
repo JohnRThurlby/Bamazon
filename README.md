@@ -2,20 +2,28 @@
 
 This is an Amazon-like storefront application. There are three possible paths:
 
-1. As a customer:       can view what products are for sale, 
+1. As a customer:       can view what products are for sale,
+<br> 
                         purchase a product, 
-                        and view the products they have purchased.  
-                        For a purchase, the customer can select to have a receipt emailed to them showing their purchase and its cost.
+<br>
+                        and view the products they have purchased. 
+<br> 
+                        For a purchase, the customer can select to have a receipt emailed to them showing their purchase and its cost. See pdf shown below. 
 
 
 <h4>Usage: node bamazonCustomer.js</h4>
 
 
-2. As a manager:        can view the available products, 
-                        can view those products with low inventory, 
-                        add stock to a product, 
-                        add a new product, 
-                        and remove a product. 
+2. As a manager:        can view the available products,
+<br> 
+                        can view those products with low inventory,
+<br> 
+                        add stock to a product,
+<br> 
+                        add a new product,
+<br> 
+                        or remove a product.
+<br> 
                         In the product low inventory view, those products with less that 50% of the inventory limit requested have the inventory shown in red, otherwise it is shown in yellow. 
 
 
@@ -23,9 +31,13 @@ This is an Amazon-like storefront application. There are three possible paths:
 
 
 3. As a supervisor:     can view the departmental sales,
+<br>
                         can modify the overhead costs for a department,
+<br>
                         add a new department,
-                        or remove a  department, but only if no products are still in that department. 
+<br>
+                        or remove a  department, but only if no products are still in that department.
+<br> 
                         In the departmental sales view, if a product has less than zero profit, the amount is displayed in red.
 
 <h4>Usage: node bamazonSupervisor.js</h4>
