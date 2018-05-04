@@ -351,7 +351,7 @@ function newUser() {
 		}	
 		]).then(function(answers){ 
 
-			var sql = 'INSERT INTO users (username, userpassword) values(?, ?, ?)'
+			var sql = 'INSERT INTO users (username, userpassword, usertype) values(?, ?, ?)'
 				
 			connection.query(sql, [answers.newuserId, answers.newuserPassword, "Customer"], function(err, result) {
 				if (err) { console.log(err) };
