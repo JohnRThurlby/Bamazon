@@ -5,9 +5,9 @@ const keys = require("./keys.js"),
       mysql = require('mysql'),
       inquirer = require('inquirer'),
       colors = require('colors'),
-      Table = require('cli-table')
+      Table = require('cli-table'),
 	  nodemailer = require('nodemailer'),
-	  mysqlPass = keys.sqlAccess
+	  mysqlPass = keys.sqlAccess,
 	  emailPass = keys.emailAccess
 
 var currentUser = " ",
@@ -31,9 +31,9 @@ const connection = mysql.createConnection({
 
 // connection to DB, and start by displaying product data
 connection.connect(function(err) {
-	if (err) throw err;
+	if (err) throw err
 	checkUser()
-});
+})
 
 var transporter = nodemailer.createTransport({
 	service: 'gmail',
@@ -41,7 +41,7 @@ var transporter = nodemailer.createTransport({
 	  user: 'bamazonucf@gmail.com',
 	  pass: emailPass.email_pass
 	}
-  });
+  })
 
 //connect to the mysql database and pull the information from the Products database to display to the user
 function displayProducts() {
@@ -74,8 +74,9 @@ function displayProducts() {
 		console.log(table.toString())
 		
 		//determine what customer wants to do
+		
 		determineAction()
-	});
+	})
 }
 
 //connect to the mysql database and pull the information from the Products database to display to the user
@@ -97,7 +98,7 @@ function displayPurchased() {
 				head: ['blue'],
 				compact: false
 			}
-		});
+		})
 
 			//loops through each item in the mysql database and pushes that information into a new row in the table
 		if (result.length > 0) {
@@ -116,8 +117,9 @@ function displayPurchased() {
 		}
 		
 		//determine what customer wants to do
+		
 		determineAction()
-	});
+	})
 }
 
 // function for customer to purchase an item
@@ -144,7 +146,7 @@ function determinePurchase() {
 			purchase(itemNeeded, quantityNeeded)
 				
 		}
-	);
+	)
 }
 
 //function to perform purchase
@@ -153,82 +155,89 @@ function purchase(itemNeeded, quantityNeeded) {
 	// get the product picked
 	var sql = 'SELECT * FROM products WHERE item = ?'
 
-	connection.query(sql, [itemNeeded], function(err, response) {
-        if (err) { console.log(err) }
+	connection.query(sql, [itemNeeded], function(err, result) {
+		if (err) { console.log(err) }
+		
+		if (result.length < 1) {
+			console.log('Product number you entered does not exist!'.red)
+			determineAction()
+		}
 
-        //there is enough in stock for purchase to continue
-        if (quantityNeeded <= response[0].stock_qty) {
+        else {
 			
-			//calculate cost
-			var totalCustcost = response[0].price * quantityNeeded
-			var saveDepartment = response[0].department_name 
-            //inform user sale is okay, and how much it will cost
-			
-			console.log("We have enough in stock. We will ship your order right out!".green);
-			outDesc = "Your total cost for " + quantityNeeded + " " + response[0].product_name + " is " + totalCustcost + ". Thank you for doing business with us!" 
-            console.log(outDesc.green)
-			
-			//update product table minus purchased quantity for stock and how mucgh sales are for this product
-			var stockUpdate = response[0].stock_qty - quantityNeeded
-			var priceUpdate = response[0].product_sales + totalCustcost
-			var sql = 'UPDATE products SET stock_qty = ?, product_sales = ? WHERE item = ?'
-
-            connection.query(sql, [stockUpdate, priceUpdate, itemNeeded], function(err, response) {
-				if (err) {
-					console.log(err)
-					undoSQL() 
-				}
-			});
-			//get dept table so can update sales and profits based on this transaction
-
-			var sql = 'SELECT * FROM departments WHERE dept_name = ?'
-
-            connection.query(sql, [saveDepartment], function(err, response) {
-				if (err) {
-					console.log(err)
-					undoSQL() 
-				}
-
-				//update department table for sales and profits
-
-				response[0].dept_sales += totalCustcost
-			    
-				var sql = 'UPDATE departments SET dept_sales = ? WHERE dept_name = ?'
+				//there is enough in stock for purchase to continue
+			if (quantityNeeded <= result[0].stock_qty) {
 				
-                connection.query(sql, [response[0].dept_sales, saveDepartment], function(err, response) {
+				//calculate cost
+				var totalCustcost = result[0].price * quantityNeeded
+				var saveDepartment = result[0].department_name 
+				//inform user sale is okay, and how much it will cost
+				
+				console.log("We have enough in stock. We will ship your order right out!".green);
+				outDesc = "Your total cost for " + quantityNeeded + " " + result[0].product_name + " is " + totalCustcost + ". Thank you for doing business with us!" 
+				console.log(outDesc.green)
+				
+				//update product table minus purchased quantity for stock and how mucgh sales are for this product
+				var stockUpdate = result[0].stock_qty - quantityNeeded
+				var priceUpdate = result[0].product_sales + totalCustcost
+				var sql = 'UPDATE products SET stock_qty = ?, product_sales = ? WHERE item = ?'
+
+				connection.query(sql, [stockUpdate, priceUpdate, itemNeeded], function(err, result) {
 					if (err) {
 						console.log(err)
 						undoSQL() 
 					}
-				});	
-			});
-				
-			var sql = 'INSERT INTO purchases (purchaseuser, purchaseprodId, purchaseqty, purchaseprice) values(?, ?, ?, ?)'
-			
-			connection.query(sql, [currentUser, response[0].item, quantityNeeded, response[0].price], function(err, response) {
-				if (err) {
-					console.log(err)
-					undoSQL() 
-				}
-				
-				// commit DB changes in case of future error, then changes up to this point are saved
-				connection.query('COMMIT', function(err, response) {
+				})
+				//get dept table so can update sales and profits based on this transaction
+
+				var sql = 'SELECT * FROM departments WHERE dept_name = ?'
+
+				connection.query(sql, [saveDepartment], function(err, result) {
 					if (err) {
 						console.log(err)
 						undoSQL() 
 					}
 
-				});
+					//update department table for sales and profits
 
-				inquirer.prompt([
-					{
-						name: 'emailAddr',
-						type: 'input',
-						message: 'If you would like an email receipt, please enter an email',
-						validate: validateEmail
+					result[0].dept_sales += totalCustcost
+					
+					var sql = 'UPDATE departments SET dept_sales = ? WHERE dept_name = ?'
+					
+					connection.query(sql, [result[0].dept_sales, saveDepartment], function(err, result) {
+						if (err) {
+							console.log(err)
+							undoSQL() 
+						}
+					})	
+				})
+					
+				var sql = 'INSERT INTO purchases (purchaseuser, purchaseprodId, purchaseqty, purchaseprice) values(?, ?, ?, ?)'
+				
+				connection.query(sql, [currentUser, result[0].item, quantityNeeded, result[0].price], function(err, result) {
+					if (err) {
+						console.log(err)
+						undoSQL() 
 					}
-				]).then(function(answers){ 
-						
+					
+					// commit DB changes in case of future error, then changes up to this point are saved
+					connection.query('COMMIT', function(err, result) {
+						if (err) {
+							console.log(err)
+							undoSQL() 
+						}
+
+					});
+
+					inquirer.prompt([
+						{
+							name: 'emailAddr',
+							type: 'input',
+							message: 'If you would like an email receipt, please enter an email',
+							validate: validateEmail
+						}
+					]).then(function(answers){ 
+							
 						if (answers.emailAddr !== '') {
 							outEmail = answers.emailAddr
 							mailOptions = {
@@ -240,22 +249,26 @@ function purchase(itemNeeded, quantityNeeded) {
 							deliverMail()
 						}
 						else determineAction()
-				});
-			});
-		} 
-		else {
-			//Tell customer, not enough stock for purchase. 
-			outDesc = "Sorry, we do not have enough of " + response[0].product_name + " to fulfill your order."
-		   	console.log(outDesc.red)
-			determineAction()
-		};
-	});
+					})
+				})
+			} 
+			else {
+				//Tell customer, not enough stock for purchase. 
+				outDesc = "Sorry, we do not have enough of " + result[0].product_name + " to fulfill your order."
+				console.log(outDesc.red)
+				
+				determineAction()
+				
+			}
+		}
+		
+	})
 }
 
 // function to rollback any updates if a DB error occurs
 function undoSQL() {
 
-	connection.query('ROLLBACK', function(err, response) {
+	connection.query('ROLLBACK', function(err, result) {
 		if (err) { console.log(err) }
 
 })}
@@ -289,7 +302,7 @@ function determineAction() {
 					process.exit(1)
 					break
 		}
-	});
+	})
 }
 
 function checkUser() {
@@ -317,7 +330,7 @@ function checkUser() {
 					process.exit(1)
 					break
 		}
-	});
+	})
 }
 function newUser() {
 
@@ -338,9 +351,9 @@ function newUser() {
 		}	
 		]).then(function(answers){ 
 
-			var sql = 'INSERT INTO users (username, userpassword) values(?, ?)'
+			var sql = 'INSERT INTO users (username, userpassword) values(?, ?, ?)'
 				
-			connection.query(sql, [answers.newuserId, answers.newuserPassword], function(err, result) {
+			connection.query(sql, [answers.newuserId, answers.newuserPassword, "Customer"], function(err, result) {
 				if (err) { console.log(err) };
 				var outDesc = "User " +  answers.newuserId + " successfully added"
 				console.log(outDesc.green);
@@ -348,7 +361,7 @@ function newUser() {
 				console.log(outDesc.green);
 				currentUser = answers.newuserId
 				determineAction()
-			});	
+			})	
 		})						
 }
 function existingUser() {
@@ -422,19 +435,17 @@ function validateNumeric(value) {
 function deliverMail() {
 			
 	transporter.sendMail(mailOptions, function(err, info){
-		try {
+		if (err === null) {
 			outDesc = 'Email sent to ' + outEmail 
 			console.log(outDesc.green)
-			determineAction();
-					}
-		catch (Exception) {
+		}
+		else {
 			if (err) {
-				console.log(err)
-			console.log("Email is not responding".red)
-			determineAction()
+				console.log("Email is not responding".red)
 			}
 		}
-	});
+		determineAction()
+	})
 }
 
 // validateAlpha makes sure that the user is supplying only alpha, numeric, dash or space

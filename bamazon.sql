@@ -22,17 +22,18 @@ CREATE TABLE departments(
 
 CREATE TABLE users(
   userId INTEGER(11) AUTO_INCREMENT NOT NULL,
-  username VARCHAR(20) NOT NULL,
-  userpassword VARCHAR(20) NOT NULL,
+  username VARCHAR(15) NOT NULL,
+  userpassword VARCHAR(15) NOT NULL,
+  usertype VARCHAR(15) NOT NULL,
   PRIMARY KEY (userId)
 );
 
 CREATE TABLE purchases(
   purchaseId INTEGER(11) AUTO_INCREMENT NOT NULL,
-  purchaseuser VARCHAR(20) NOT NULL,
+  purchaseuser VARCHAR(15) NOT NULL,
   purchaseprodId INTEGER(11) NOT NULL,
   purchaseqty INTEGER(11) NOT NULL, 
-  purchaseprice INTEGER(10,2) NOT NULL, 
+  purchaseprice DECIMAL(10,2) NOT NULL, 
   PRIMARY KEY (purchaseId)
 );
 
