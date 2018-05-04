@@ -16,21 +16,24 @@ Usage: node bamazonSupervisor.js
 
 Short videos showing usage and output:
 
-1. Customer
+<h3>1. Customer:</h3>
 
 ![customer](https://user-images.githubusercontent.com/33644735/39631768-1dc37760-4f81-11e8-8e1f-faab77eb2e67.gif)
 
-2. Manager
+<h3>2. Manager:</h3>
 
 ![manager](https://user-images.githubusercontent.com/33644735/39632279-9db3ab10-4f82-11e8-8c5f-06387bda18e1.gif)
 
-3. Supervisor
+<h3>3. Supervisor:</h3>
 
 ![supervisor](https://user-images.githubusercontent.com/33644735/39631985-ca4380f2-4f81-11e8-917c-5ee2bae721d5.gif)
 
-PDF of email for Customer purchase
+
+<h3>PDF of email for Customer purchase:</h3>
 
 [Purchase from Bamazon.pdf](https://github.com/JohnRThurlby/Bamazon/files/1974725/Purchase.from.Bamazon.pdf)
+
+
 
 
 Software used: 
