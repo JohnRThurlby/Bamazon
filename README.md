@@ -14,17 +14,12 @@ This is an Amazon-like storefront application. There are three possible paths:
 <h4>Usage: node bamazonCustomer.js</h4>
 
 
-2. As a manager:        can view the available products,
-<br> 
-                        can view those products with low inventory,
-<br> 
-                        add stock to a product,
-<br> 
-                        add a new product,
-<br> 
-                        or remove a product.
-<br> 
-                        In the product low inventory view, those products with less that 50% of the inventory limit requested have the inventory shown in red, otherwise it is shown in yellow. 
+2. As a manager:       - can view the available products,
+                       - can view those products with low inventory,
+                       - add stock to a product,
+                       - add a new product,
+                       - or remove a product.
+                       - In the product low inventory view, those products with less that 50% of the inventory limit requested have the inventory shown in red, otherwise it is shown in yellow. 
 
 
 <h4>Usage: node bamazonManager.js</h4> 
